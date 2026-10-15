@@ -47,17 +47,11 @@ stateDiagram-v2
 ```
 
 ## Entities Model
-
+ 
 ```mermaid
 classDiagram
-    class UriEntity {
-        uri : String
-    }
- 
-    class UserDetails
-    <<interface>> UserDetails
- 
     class User {
+        id : Long
         email : String
         passwordHash : String
         phone : String
@@ -73,7 +67,6 @@ classDiagram
         type : TokenType
         tokenHash : String
         expiresAt : ZonedDateTime
-        usedAt : ZonedDateTime
     }
  
     class DriverProfile {
@@ -88,15 +81,12 @@ classDiagram
     class Document {
         type : DocumentType
         side : DocumentSide
-        fileUrl : String
-        mimeType : String
-        sizeBytes : Long
         status : DocumentStatus
     }
  
     class Company {
         legalName : String
-        taxId : String
+        companyId : String
         address : String
         iban : String
         status : CompanyStatus
@@ -118,7 +108,7 @@ classDiagram
         model : String
         year : Integer
         category : String
-        transmission : Transmission
+        transmission : String
         fuelType : String
         seats : Integer
         dailyPriceCents : Integer
@@ -134,10 +124,6 @@ classDiagram
         endDateTime : ZonedDateTime
         status : BookingStatus
         holdExpiresAt : ZonedDateTime
-        version : Long
-        dailyPriceCents : Integer
-        days : Integer
-        subtotalCents : Integer
         extras : JSON
         extrasCents : Integer
         taxCents : Integer
@@ -153,23 +139,21 @@ classDiagram
         amountCents : Integer
         status : PaymentStatus
         failureReason : String
-        providerRef : String
-        idempotencyKey : String
     }
  
     class Inspection {
         type : InspectionType
         mileage : Integer
-        fuelLevel : FuelLevel
+        fuelLevel : String
         notes : String
         latitude : Double
         longitude : Double
-        lockedAt : ZonedDateTime
+        lockedBy : String
     }
  
     class InspectionPhoto {
         angle : PhotoAngle
-        url : String
+        photo : String
     }
  
     class Incident {
@@ -184,10 +168,8 @@ classDiagram
     }
  
     class Notification {
-        type : NotificationType
+        viewed : Boolean
         message : String
-        read : Boolean
-        channel : Channel
         sentAt : ZonedDateTime
     }
  
@@ -195,36 +177,42 @@ classDiagram
         action : String
         entityType : String
         entityId : String
-        beforeJson : String
-        afterJson : String
-        ip : String
     }
  
-    UriEntity <|-- User
-    UserDetails <|-- User
-    UriEntity <|-- Company
-    UriEntity <|-- PickupPoint
-    UriEntity <|-- Vehicle
-    UriEntity <|-- Booking
- 
-    User "1" <-- "0..1" DriverProfile: profile
-    User "1" <-- "*" EmailToken: tokens
-    User "1" <-- "*" Document: owner
-    User "1" <-- "*" Notification: recipient
-    User "1" <-- "*" AuditLog: actor
-    Company "0..1" <-- "*" User: staff
-    Company "1" <-- "*" PickupPoint: owns
-    Company "1" <-- "*" Vehicle: owns
-    PickupPoint "1" <-- "*" Vehicle: base
-    User "1" <-- "*" Booking: driver
-    Vehicle "1" <-- "*" Booking: booked
-    PickupPoint "1" <-- "*" Booking: pickup
-    PickupPoint "1" <-- "*" Booking: return
-    Booking "1" <-- "*" Payment: payments
-    Booking "1" <-- "0..2" Inspection: inspections
-    Inspection "1" <-- "*" InspectionPhoto: photos
-    Booking "1" <-- "*" Incident: incidents
+    Company "0..1" --> "*" User : staff
+    User "1" --> "0..1" DriverProfile : profile
+    User "0..1" --> "*" DriverProfile : reviewedBy
+    User "1" --> "*" EmailToken : tokens
+    User "1" --> "*" Document : owner
+    Company "0..1" --> "*" Document : documents
+    Company "1" --> "*" PickupPoint : pickupPoints
+    Company "1" --> "*" Vehicle : vehicles
+    PickupPoint "1" --> "*" Vehicle : vehicles
+    User "1" --> "*" Booking : driver
+    Vehicle "1" --> "*" Booking : bookings
+    PickupPoint "1" --> "*" Booking : pickup
+    PickupPoint "1" --> "*" Booking : return
+    User "0..1" --> "*" Booking : cancelledBy
+    Booking "1" --> "*" Payment : payments
+    Booking "1" --> "*" Incident : incidents
+    Booking "1" --> "0..2" Inspection : inspections
+    Inspection "1" --> "*" InspectionPhoto : photos
+    User "1" --> "*" Inspection : performedBy
+    User "1" --> "*" Incident : reportedBy
+    User "0..1" --> "*" Incident : resolvedBy
+    User "1" --> "*" Notification : notifications
+    User "1" --> "*" AuditLog : actor
 ```
+ 
+Design decisions:
+ 
+- `User` carries `role` (`DRIVER`, `COMPANY_STAFF`, `ADMIN`) and, for company staff, `company` and `companyRole`.
+- `Booking` holds the price snapshot and the cancellation data in the same table.
+- `Incident` includes the dispute (resolution, deposit deduction, resolver).
+- Vehicle photos, extras and notification preferences are stored as JSON.
+- Amounts are stored in cents and enums are persisted as strings.
+- Sensitive data (`passwordHash`, `iban`, `licenseNumber`, uploaded files) is protected; tokens are stored only as hashes.
+- Overlapping bookings are prevented with a transaction and a pessimistic lock on the vehicle (`@Lock(PESSIMISTIC_WRITE)`), plus `@Version` on `Booking`.
 
 ## Features
  
