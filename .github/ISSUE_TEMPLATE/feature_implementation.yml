@@ -1,0 +1,146 @@
+name: Feature Implementation
+description: Track the implementation of a planned or approved feature
+title: "[Feature]: "
+labels: ["enhancement"]
+body:
+    - type: markdown
+      attributes:
+          value: |
+              Thanks for taking the time to describe this feature. The more detail you provide, the easier it is to implement and review.
+
+    - type: checkboxes
+      id: prerequisites
+      attributes:
+          label: Before you start
+          options:
+              - label: I searched existing issues and this feature has not already been requested
+                required: true
+              - label: This feature has been discussed or approved (link in "Related links" below if applicable)
+                required: false
+
+    - type: textarea
+      id: summary
+      attributes:
+          label: Summary
+          description: A short, clear description of the feature.
+          placeholder: "Add support for exporting reports as CSV."
+      validations:
+          required: true
+
+    - type: textarea
+      id: problem
+      attributes:
+          label: Problem / Motivation
+          description: What problem does this solve? Who benefits and why does it matter?
+          placeholder: "Users currently have to copy data manually, which is slow and error-prone."
+      validations:
+          required: true
+
+    - type: textarea
+      id: solution
+      attributes:
+          label: Proposed Solution
+          description: Describe how the feature should work from the user's perspective, and any technical approach you have in mind.
+      validations:
+          required: true
+
+    - type: textarea
+      id: acceptance
+      attributes:
+          label: Acceptance Criteria
+          description: Conditions that must be met for this feature to be considered done.
+          value: |
+              - [ ] 
+              - [ ] 
+              - [ ]
+      validations:
+          required: true
+
+    - type: textarea
+      id: tasks
+      attributes:
+          label: Implementation Tasks
+          description: Break the work into smaller steps.
+          value: |
+              - [ ] Design / technical spec
+              - [ ] Implementation
+              - [ ] Unit and integration tests
+              - [ ] Documentation updates
+              - [ ] Code review
+      validations:
+          required: false
+
+    - type: textarea
+      id: alternatives
+      attributes:
+          label: Alternatives Considered
+          description: Other approaches you considered and why they were not chosen.
+      validations:
+          required: false
+
+    - type: dropdown
+      id: area
+      attributes:
+          label: Area
+          description: Which part of the project does this affect?
+          multiple: true
+          options:
+              - Frontend / UI
+              - Backend / API
+              - Database
+              - CLI
+              - Infrastructure / CI
+              - Documentation
+              - Other
+      validations:
+          required: true
+
+    - type: dropdown
+      id: priority
+      attributes:
+          label: Priority
+          options:
+              - Low
+              - Medium
+              - High
+              - Critical
+          default: 1
+      validations:
+          required: true
+
+    - type: dropdown
+      id: breaking
+      attributes:
+          label: Breaking change?
+          description: Will this change break existing behavior or APIs?
+          options:
+              - "No"
+              - "Yes"
+              - "Not sure"
+          default: 0
+      validations:
+          required: true
+
+    - type: textarea
+      id: dependencies
+      attributes:
+          label: Dependencies / Risks
+          description: Other issues, services, or decisions this depends on, and any known risks.
+      validations:
+          required: false
+
+    - type: textarea
+      id: links
+      attributes:
+          label: Related links
+          description: Design docs, mockups, discussions, related issues or PRs.
+      validations:
+          required: false
+
+    - type: checkboxes
+      id: contribution
+      attributes:
+          label: Contribution
+          options:
+              - label: I am willing to implement this feature and open a pull request
+                required: false
