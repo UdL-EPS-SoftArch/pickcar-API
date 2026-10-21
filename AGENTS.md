@@ -17,3 +17,8 @@ Refer to `skills/` for specific stage playbooks:
 - `skills/sdd-bdd-verifier/SKILL.md`: Run `mvn test -Dtest=CucumberTest` and analyze failures.
 
 Detailed AI workflows are documented in `AI_DEVELOPMENT_GUIDE.md`.
+
+# Reglas
+
+- Nunca leas, edites ni sugieras cambios en `opencode.json`.
+- Ignora `opencode.json` al explorar o buscar en el proyecto.
