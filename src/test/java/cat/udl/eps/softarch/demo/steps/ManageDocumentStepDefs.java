@@ -101,7 +101,7 @@ public class ManageDocumentStepDefs {
     public void iRetrieveTheDocument(String fileName) throws Throwable {
         Document document = documentRepository.findByFileName(fileName).stream().findFirst().orElseThrow();
         stepDefs.result = stepDefs.mockMvc.perform(
-                get("/documents/" + document.getId())
+                get(document.getUri())
                     .accept(MediaType.APPLICATION_JSON)
                     .with(AuthenticationStepDefs.authenticate()))
             .andDo(print());
@@ -111,7 +111,7 @@ public class ManageDocumentStepDefs {
     public void iChangeTheStatusOfTheDocument(String fileName, String status) throws Throwable {
         Document document = documentRepository.findByFileName(fileName).stream().findFirst().orElseThrow();
         stepDefs.result = stepDefs.mockMvc.perform(
-                patch("/documents/" + document.getId())
+                patch(document.getUri())
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(stepDefs.mapper.writeValueAsString(Map.of("status", status)))
                     .characterEncoding(StandardCharsets.UTF_8)
