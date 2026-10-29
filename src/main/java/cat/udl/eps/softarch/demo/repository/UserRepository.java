@@ -1,25 +1,33 @@
 package cat.udl.eps.softarch.demo.repository;
 
 import cat.udl.eps.softarch.demo.domain.User;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.data.repository.PagingAndSortingRepository;
 import org.springframework.data.repository.query.Param;
 import org.springframework.data.rest.core.annotation.RepositoryRestResource;
+import org.springframework.data.rest.core.annotation.RestResource;
 
-import java.util.List;
+import java.util.Optional;
 
 @RepositoryRestResource
-public interface UserRepository extends CrudRepository<User, String>, PagingAndSortingRepository<User, String> {
+public interface UserRepository extends CrudRepository<User, Long>, PagingAndSortingRepository<User, Long> {
 
-  /* Interface provides automatically, as defined in
-   * https://docs.spring.io/spring-data/commons/docs/current/api/org/springframework/data/repository/CrudRepository.html
-   * and
-   * https://docs.spring.io/spring-data/commons/docs/current/api/org/springframework/data/repository/PagingAndSortingRepository.html
-   * the methods: count, delete, deleteAll, deleteById, existsById, findAll, findAllById, findById, save, saveAll,...
-   *
-   * Additional methods like findByUsernameContaining can be defined following:
-   * https://docs.spring.io/spring-data/jpa/docs/current/reference/html/#jpa.query-methods.query-creation
-   */
+  String OWNERSHIP_CLAUSE =
+      "u.email = ?#{authentication.name} " +
+      "OR ?#{hasRole('ADMIN')} = true";
 
-  List<User> findByIdContaining(@Param("text") String text);
+  @Override
+  @Query("SELECT u FROM User u WHERE " + OWNERSHIP_CLAUSE)
+  Page<User> findAll(Pageable pageable);
+
+  @Override
+  @Query("SELECT u FROM User u WHERE u.id = :id AND (" + OWNERSHIP_CLAUSE + ")")
+  Optional<User> findById(@Param("id") Long id);
+
+  // Internal lookup (authentication, tests); not exported to avoid leaking registered emails
+  @RestResource(exported = false)
+  Optional<User> findByEmail(String email);
 }

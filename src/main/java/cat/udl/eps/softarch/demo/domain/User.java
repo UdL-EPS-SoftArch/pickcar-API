@@ -1,5 +1,6 @@
 package cat.udl.eps.softarch.demo.domain;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import jakarta.persistence.*;
@@ -10,24 +11,39 @@ import com.fasterxml.jackson.annotation.JsonValue;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.hibernate.validator.constraints.Length;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.AuthorityUtils;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+import java.time.Instant;
+import java.time.ZonedDateTime;
 import java.util.Collection;
 
 @Entity
-@Table(name = "DemoUser") //Avoid collision with system table User
+@Table(name = "PickCarUser") //Avoid collision with system table User
+@EntityListeners(AuditingEntityListener.class)
 @Data
 @EqualsAndHashCode(callSuper = true)
-public class User extends UriEntity<String> implements UserDetails {
+public class User extends UriEntity<Long> implements UserDetails {
+
+	public enum Role {
+		DRIVER, COMPANY_STAFF, ADMIN
+	}
+
+	public enum Status {
+		PENDING_EMAIL, ACTIVE
+	}
 
 	public static PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
 	@Id
-	private String id;
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	private Long id;
 
 	@NotBlank
 	@Email
@@ -42,20 +58,39 @@ public class User extends UriEntity<String> implements UserDetails {
 	@JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
 	private boolean passwordReset;
 
+	private String fullName;
+
+	private String phone;
+
+	@Enumerated(EnumType.STRING)
+	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
+	private Role role = Role.DRIVER;
+
+	@Enumerated(EnumType.STRING)
+	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
+	private Status status = Status.PENDING_EMAIL;
+
+	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
+	private ZonedDateTime emailVerifiedAt;
+
+	@CreatedDate
+	@DateTimeFormat
+	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
+	private Instant created;
+
 	public void encodePassword() {
 		this.password = passwordEncoder.encode(this.password);
 	}
 
 	@Override
-	public String getUsername() { return id; }
-
-	public void setUsername(String username) { this.id = username; }
+	@JsonIgnore
+	public String getUsername() { return email; }
 
 	@Override
 	@JsonValue(value = false)
 	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
 	public Collection<? extends GrantedAuthority> getAuthorities() {
-		return AuthorityUtils.commaSeparatedStringToAuthorityList("ROLE_USER");
+		return AuthorityUtils.createAuthorityList("ROLE_" + role.name());
 	}
 
 	@Override
