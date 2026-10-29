@@ -45,7 +45,7 @@ public class ManageDocumentStepDefs {
     @Given("There is a document with file name {string} uploaded by {string}")
     public void thereIsADocumentUploadedBy(String fileName, String username) {
         Document document = newDocument(fileName, 1024);
-        document.setUploadedBy(userRepository.findById(username).orElseThrow());
+        document.setUploadedBy(userRepository.findByEmail(username).orElseThrow());
         documentRepository.save(document);
     }
 
@@ -94,7 +94,7 @@ public class ManageDocumentStepDefs {
                     .accept(MediaType.APPLICATION_JSON)
                     .with(AuthenticationStepDefs.authenticate()))
             .andDo(print())
-            .andExpect(jsonPath("$.username", is(username)));
+            .andExpect(jsonPath("$.email", is(username)));
     }
 
     @When("I retrieve the document with file name {string}")
