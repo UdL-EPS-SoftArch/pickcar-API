@@ -33,9 +33,7 @@ public class DriverProfileStepDefs {
     @Given("a DriverProfile exists with status PENDING")
     public void a_profile_exists_with_status_pending() {
         User user = new User();
-        user.setId("user1");
-        user.setEmail("test@test.com");
-        user.setUsername("testuser");
+        user.setEmail("user1@sample.app");
         user.setPassword("password");
         userRepository.save(user);
 
@@ -51,9 +49,7 @@ public class DriverProfileStepDefs {
     @When("I create a DriverProfile with user {string} and verificationStatus {string}")
     public void i_create_a_driver_profile(String userId, String status) {
         User user = new User();
-        user.setId(userId);
-        user.setEmail("test@test.com");
-        user.setUsername("testuser");
+        user.setEmail(userId + "@sample.app");
         user.setPassword("password");
         userRepository.save(user);
 
