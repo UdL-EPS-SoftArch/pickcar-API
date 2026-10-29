@@ -18,7 +18,7 @@ import java.util.Optional;
 public interface DocumentRepository extends CrudRepository<Document, Long>, PagingAndSortingRepository<Document, Long> {
 
     String OWNERSHIP_CLAUSE =
-        "d.uploadedBy.id = ?#{authentication.name} " +
+        "d.uploadedBy.email = ?#{authentication.name} " +
         "OR ?#{hasRole('ADMIN')} = true";
 
     @Override
