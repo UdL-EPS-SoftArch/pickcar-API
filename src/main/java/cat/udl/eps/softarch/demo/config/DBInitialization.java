@@ -5,43 +5,50 @@ import cat.udl.eps.softarch.demo.repository.RecordRepository;
 import cat.udl.eps.softarch.demo.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.env.Environment;
 import jakarta.annotation.PostConstruct;
-
-import java.util.Arrays;
 
 @Configuration
 public class DBInitialization {
     @Value("${default-password}")
     String defaultPassword;
 
-    @Value("${spring.profiles.active:}")
-    private String activeProfiles;
-
     private final RecordRepository recordRepository;
     private final UserRepository userRepository;
+    private final Environment environment;
 
-    public DBInitialization(UserRepository userRepository, RecordRepository recordRepository) {
+    public DBInitialization(UserRepository userRepository, RecordRepository recordRepository,
+                            Environment environment) {
         this.userRepository = userRepository;
         this.recordRepository = recordRepository;
+        this.environment = environment;
     }
 
     @PostConstruct
     public void initializeDatabase() {
         // Default user
-        if (!userRepository.existsById("demo")) {
+        if (userRepository.findByEmail("demo@sample.app").isEmpty()) {
             User user = new User();
             user.setEmail("demo@sample.app");
-            user.setId("demo");
+            user.setStatus(User.Status.ACTIVE);
             user.setPassword(defaultPassword);
             user.encodePassword();
             userRepository.save(user);
         }
-        if (Arrays.asList(activeProfiles.split(",")).contains("test")) {
+        if (environment.matchesProfiles("test")) {
             // Testing instances
-            if (!userRepository.existsById("test")) {
+            if (userRepository.findByEmail("admin@sample.app").isEmpty()) {
+                User admin = new User();
+                admin.setEmail("admin@sample.app");
+                admin.setRole(User.Role.ADMIN);
+                admin.setStatus(User.Status.ACTIVE);
+                admin.setPassword(defaultPassword);
+                admin.encodePassword();
+                userRepository.save(admin);
+            }
+            if (userRepository.findByEmail("test@sample.app").isEmpty()) {
                 User user = new User();
                 user.setEmail("test@sample.app");
-                user.setId("test");
                 user.setPassword(defaultPassword);
                 user.encodePassword();
                 user = userRepository.save(user);
