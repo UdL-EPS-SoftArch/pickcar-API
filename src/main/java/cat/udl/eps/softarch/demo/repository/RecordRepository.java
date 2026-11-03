@@ -18,7 +18,7 @@ import java.util.Optional;
 public interface RecordRepository extends CrudRepository<Record, Long>, PagingAndSortingRepository<Record, Long> {
 
     String OWNERSHIP_CLAUSE =
-        "r.ownedBy.id = ?#{authentication.name} " +
+        "r.ownedBy.email = ?#{authentication.name} " +
         "OR r.status = 'PUBLIC' " +
         "OR ?#{hasRole('ADMIN')} = true";
 

@@ -30,6 +30,10 @@ public class UserEventHandler {
     @HandleBeforeCreate
     public void handleUserPreCreate(User user) {
         logger.info("Before creating: {}", user.toString());
+        // Self-registration always creates a driver pending email verification
+        user.setRole(User.Role.DRIVER);
+        user.setStatus(User.Status.PENDING_EMAIL);
+        user.setEmailVerifiedAt(null);
     }
 
     @HandleBeforeSave

@@ -1,15 +1,29 @@
 @startuml
 
 class User extends UriEntity implements UserDetails {
-  username : String
-  password : String
   email : String
+  password : String
+  fullName : String
+  phone : String
+  role : Role
+  status : Status
+  emailVerifiedAt : ZonedDateTime
+  created : Instant
+}
+
+enum Role {
+  DRIVER
+  COMPANY_STAFF
+  ADMIN
+}
+
+enum Status {
+  PENDING_EMAIL
+  ACTIVE
 }
 
 class UriEntity {
   uri : String
 }
-
-User "1" --right-- "*" Resource : owner <
 
 @enduml
