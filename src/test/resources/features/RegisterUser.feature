@@ -76,3 +76,31 @@ Feature: Register User
     And I login as "user@sample.app" with password "password"
     When I change the user with email "user@sample.app" to role "ADMIN" and status "ACTIVE"
     Then The user with email "user@sample.app" has role "DRIVER" and status "PENDING_EMAIL"
+
+  Scenario: Users only list themselves
+    Given There is a registered user with email "user@sample.app" and password "password"
+    And There is a registered user with email "another@sample.app" and password "password"
+    And I login as "user@sample.app" with password "password"
+    When I list all users
+    Then The response code is 200
+    And The user list contains 1 user
+
+  Scenario: Admin lists all users
+    Given There is a registered user with email "user@sample.app" and password "password"
+    And I login as "admin@sample.app" with password "password"
+    When I list all users
+    Then The response code is 200
+    And The user list contains more than 1 users
+
+  Scenario: Users cannot delete other users
+    Given There is a registered user with email "user@sample.app" and password "password"
+    And There is a registered user with email "another@sample.app" and password "password"
+    And I login as "another@sample.app" with password "password"
+    When I delete the user with email "user@sample.app"
+    Then The response code is 404
+    And The user with email "user@sample.app" still exists
+
+  Scenario: Anonymous cannot list users
+    Given I'm not logged in
+    When I list all users
+    Then The response code is 401

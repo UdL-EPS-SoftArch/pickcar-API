@@ -2,6 +2,7 @@ package cat.udl.eps.softarch.demo.steps;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.hamcrest.Matchers.is;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
@@ -138,5 +139,40 @@ public class RegisterStepDefs {
                     .accept(MediaType.APPLICATION_JSON)
                     .with(AuthenticationStepDefs.authenticate()))
             .andDo(print());
+  }
+
+  @When("I list all users")
+  public void iListAllUsers() throws Throwable {
+    stepDefs.result = stepDefs.mockMvc.perform(
+            get("/users")
+                    .accept(MediaType.APPLICATION_JSON)
+                    .with(AuthenticationStepDefs.authenticate()))
+            .andDo(print());
+  }
+
+  @Then("The user list contains {int} user(s)")
+  public void theUserListContains(int count) throws Throwable {
+    stepDefs.result
+            .andExpect(jsonPath("$._embedded.users", org.hamcrest.Matchers.hasSize(count)));
+  }
+
+  @Then("The user list contains more than {int} users")
+  public void theUserListContainsMoreThan(int count) throws Throwable {
+    stepDefs.result
+            .andExpect(jsonPath("$._embedded.users.length()", org.hamcrest.Matchers.greaterThan(count)));
+  }
+
+  @When("I delete the user with email {string}")
+  public void iDeleteTheUserWithEmail(String email) throws Throwable {
+    User user = userRepository.findByEmail(email).orElseThrow();
+    stepDefs.result = stepDefs.mockMvc.perform(
+            org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete(user.getUri())
+                    .with(AuthenticationStepDefs.authenticate()))
+            .andDo(print());
+  }
+
+  @And("The user with email {string} still exists")
+  public void theUserStillExists(String email) {
+    assertTrue(userRepository.findByEmail(email).isPresent());
   }
 }
