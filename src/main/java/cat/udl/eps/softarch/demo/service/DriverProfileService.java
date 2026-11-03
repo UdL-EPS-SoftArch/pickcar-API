@@ -2,6 +2,7 @@ package cat.udl.eps.softarch.demo.service;
 
 import cat.udl.eps.softarch.demo.domain.DriverProfile;
 import cat.udl.eps.softarch.demo.repository.DriverProfileRepository;
+import cat.udl.eps.softarch.demo.repository.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -19,6 +20,7 @@ import java.util.Optional;
 public class DriverProfileService {
 
     private final DriverProfileRepository driverProfileRepository;
+    private final UserRepository userRepository;
 
     /**
      * Creates a new driver profile linked to the specified user.
@@ -40,7 +42,7 @@ public class DriverProfileService {
      */
     @Transactional(readOnly = true)
     public DriverProfile getProfileById(Long profileId) {
-        return driverProfileRepository.findById(profileId)
+        return driverProfileRepository.findOneById(profileId)
                 .orElseThrow(() -> new EntityNotFoundException("DriverProfile not found with id: " + profileId));
     }
 
@@ -49,8 +51,9 @@ public class DriverProfileService {
      */
     @Transactional(readOnly = true)
     public List<DriverProfile> getProfilesByUserId(Long userId) {
-        // The repository method uses SpEL authentication.name which expects a String.
-        return driverProfileRepository.findByUserId(userId.toString());
+        return userRepository.findById(userId)
+                .map(driverProfileRepository::findAllByUser)
+                .orElse(List.of());
     }
 
     /**

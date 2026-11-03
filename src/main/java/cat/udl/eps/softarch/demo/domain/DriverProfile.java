@@ -36,15 +36,14 @@ public class DriverProfile extends UriEntity<Long> {
     @Enumerated(EnumType.STRING)
     private VerificationStatus verificationStatus = VerificationStatus.PENDING;
 
+    @Length(max = 500)
     private String rejectionReason;
 
-    @ManyToOne
-    @JsonIdentityReference(alwaysAsId = true)
-    private Document licenceFrontDoc;
+    @NotBlank
+    private String licenceFrontDoc;
 
-    @ManyToOne
-    @JsonIdentityReference(alwaysAsId = true)
-    private Document licenceBackDoc;
+    @NotBlank
+    private String licenceBackDoc;
 
     @CreatedDate
     @DateTimeFormat
@@ -55,4 +54,5 @@ public class DriverProfile extends UriEntity<Long> {
     @DateTimeFormat
     @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     private Instant updatedAt;
+
 }

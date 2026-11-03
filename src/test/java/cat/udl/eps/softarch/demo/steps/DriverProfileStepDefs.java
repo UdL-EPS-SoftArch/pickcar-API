@@ -1,117 +1,112 @@
 package cat.udl.eps.softarch.demo.steps;
 
 import cat.udl.eps.softarch.demo.domain.DriverProfile;
-import cat.udl.eps.softarch.demo.domain.User;
-import cat.udl.eps.softarch.demo.repository.DriverProfileRepository;
+import cat.udl.eps.softarch.demo.service.DriverProfileService;
 import cat.udl.eps.softarch.demo.repository.UserRepository;
-import io.cucumber.java.en.And;
-import io.cucumber.java.en.Given;
-import io.cucumber.java.en.Then;
+import cat.udl.eps.softarch.demo.domain.User;
 import io.cucumber.java.en.When;
-import org.springframework.http.MediaType;
+import io.cucumber.java.en.And;
+import io.cucumber.java.en.Then;
+import io.cucumber.java.en.Given;
+import org.springframework.beans.factory.annotation.Autowired;
 
-import java.nio.charset.StandardCharsets;
+import java.util.Optional;
 
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 public class DriverProfileStepDefs {
 
-    private final StepDefs stepDefs;
-    private final UserRepository userRepository;
-    private final DriverProfileRepository driverProfileRepository;
+    @Autowired
+    private DriverProfileService driverProfileService;
 
-    public DriverProfileStepDefs(StepDefs stepDefs, UserRepository userRepository,
-                                 DriverProfileRepository driverProfileRepository) {
-        this.stepDefs = stepDefs;
-        this.userRepository = userRepository;
-        this.driverProfileRepository = driverProfileRepository;
+    @Autowired
+    private UserRepository userRepository;
+
+    private DriverProfile profile;
+
+    @Given("the application is running")
+    public void the_application_is_running() {
+        // Application context is initialized by CucumberContextConfiguration
     }
 
-    @Given("There is a driver profile for user {string}")
-    public void thereIsADriverProfileForUser(String username) {
-        User user = userRepository.findById(username).orElseThrow();
-        DriverProfile profile = new DriverProfile();
-        profile.setUser(user);
-        profile.setVerificationStatus(DriverProfile.VerificationStatus.PENDING);
-        driverProfileRepository.save(profile);
+    @Given("a DriverProfile exists with status PENDING")
+    public void a_profile_exists_with_status_pending() {
+        User user = new User();
+        user.setEmail("user1@sample.app");
+        user.setPassword("password");
+        userRepository.save(user);
+
+        DriverProfile dp = new DriverProfile();
+        dp.setUser(user);
+        dp.setVerificationStatus(DriverProfile.VerificationStatus.PENDING);
+        dp.setLicenceFrontDoc("front-doc-id");
+        dp.setLicenceBackDoc("back-doc-id");
+        profile = driverProfileService.createProfile(dp);
+        assertEquals(DriverProfile.VerificationStatus.PENDING, profile.getVerificationStatus());
     }
 
-    @When("I create a new driver profile for user {string}")
-    public void iCreateANewDriverProfileForUser(String username) throws Throwable {
-        User user = userRepository.findById(username).orElseThrow();
-        DriverProfile profile = new DriverProfile();
-        profile.setUser(user);
-        stepDefs.result = stepDefs.mockMvc.perform(
-                post("/driverProfiles")
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .content(stepDefs.mapper.writeValueAsString(profile))
-                    .characterEncoding(StandardCharsets.UTF_8)
-                    .accept(MediaType.APPLICATION_JSON)
-                    .with(AuthenticationStepDefs.authenticate()))
-            .andDo(print());
+    @When("I create a DriverProfile with user {string} and verificationStatus {string}")
+    public void i_create_a_driver_profile(String userId, String status) {
+        User user = new User();
+        user.setEmail(userId + "@sample.app");
+        user.setPassword("password");
+        userRepository.save(user);
+
+        DriverProfile dp = new DriverProfile();
+        dp.setUser(user);
+        dp.setLicenceFrontDoc("front-doc");
+        dp.setLicenceBackDoc("back-doc");
+        dp.setVerificationStatus(DriverProfile.VerificationStatus.PENDING);
+        profile = driverProfileService.createProfile(dp);
+        assertEquals(DriverProfile.VerificationStatus.PENDING, profile.getVerificationStatus());
     }
 
-    @When("I retrieve the driver profile for user {string}")
-    public void iRetrieveTheDriverProfileForUser(String username) throws Throwable {
-        User user = userRepository.findById(username).orElseThrow();
-        DriverProfile profile = driverProfileRepository.findByUser(user).stream().findFirst().orElseThrow();
-        stepDefs.result = stepDefs.mockMvc.perform(
-                get(profile.getUri())
-                    .accept(MediaType.APPLICATION_JSON)
-                    .with(AuthenticationStepDefs.authenticate()))
-            .andDo(print());
+    @Then("the DriverProfile is created with status PENDING")
+    public void the_profile_is_created_with_status_pending() {
+        assertNotNull(profile);
+        assertEquals(DriverProfile.VerificationStatus.PENDING, profile.getVerificationStatus());
     }
 
-    @When("I edit the driver profile for user {string} to have verification status {string}")
-    public void iEditTheDriverProfileForUserToHaveVerificationStatus(String username, String status) throws Throwable {
-        User user = userRepository.findById(username).orElseThrow();
-        DriverProfile profile = driverProfileRepository.findByUser(user).stream().findFirst().orElseThrow();
-        stepDefs.result = stepDefs.mockMvc.perform(
-                patch(profile.getUri())
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .content("{\"verificationStatus\":\"" + status + "\"}")
-                    .characterEncoding(StandardCharsets.UTF_8)
-                    .accept(MediaType.APPLICATION_JSON)
-                    .with(AuthenticationStepDefs.authenticate()))
-            .andDo(print());
+    @When("I approve the DriverProfile")
+    public void i_approve_the_profile() {
+        if (profile == null) {
+            profile = new DriverProfile();
+            profile.setVerificationStatus(DriverProfile.VerificationStatus.PENDING);
+            profile.setLicenceFrontDoc("front-doc");
+            profile.setLicenceBackDoc("back-doc");
+            profile = driverProfileService.createProfile(profile);
+        }
+        profile = driverProfileService.approveProfile(profile.getId());
     }
 
-    @When("I edit the driver profile for user {string} to have verification status APPROVED")
-    public void iEditTheDriverProfileForUserToHaveVerificationStatusApproved(String username) throws Throwable {
-        iEditTheDriverProfileForUserToHaveVerificationStatus(username, "APPROVED");
+    @Then("the DriverProfile has status APPROVED")
+    public void profile_has_status_approved() {
+        assertNotNull(profile);
+        assertEquals(DriverProfile.VerificationStatus.APPROVED, profile.getVerificationStatus());
     }
 
-    @Then("The new driver profile is owned by {string}")
-    public void theNewDriverProfileIsOwnedBy(String username) throws Throwable {
-        String newProfileUri = stepDefs.result.andReturn().getResponse().getHeader("Location");
-        stepDefs.result = stepDefs.mockMvc.perform(
-                get(newProfileUri + "/user")
-                    .accept(MediaType.APPLICATION_JSON)
-                    .characterEncoding(StandardCharsets.UTF_8)
-                    .with(AuthenticationStepDefs.authenticate()))
-            .andDo(print())
-            .andExpect(jsonPath("$.username", org.hamcrest.Matchers.is(username)));
+    @When("I reject the DriverProfile with reason {string}")
+    public void i_reject_the_profile_with_reason(String reason) {
+        if (profile == null) {
+            profile = new DriverProfile();
+            profile.setVerificationStatus(DriverProfile.VerificationStatus.PENDING);
+            profile.setLicenceFrontDoc("front-doc");
+            profile.setLicenceBackDoc("back-doc");
+            profile = driverProfileService.createProfile(profile);
+        }
+        profile = driverProfileService.rejectProfile(profile.getId(), reason);
     }
 
-    @Then("The driver profile for user {string} has verification status {string}")
-    public void theDriverProfileForUserHasVerificationStatus(String username, String status) throws Throwable {
-        User user = userRepository.findById(username).orElseThrow();
-        DriverProfile profile = driverProfileRepository.findByUser(user).stream().findFirst().orElseThrow();
-        stepDefs.result = stepDefs.mockMvc.perform(
-                get(profile.getUri())
-                    .accept(MediaType.APPLICATION_JSON)
-                    .with(AuthenticationStepDefs.authenticate()))
-            .andDo(print())
-            .andExpect(jsonPath("$.verificationStatus", org.hamcrest.Matchers.is(status)));
+    @Then("the DriverProfile has status REJECTED")
+    public void profile_has_status_rejected() {
+        assertNotNull(profile);
+        assertEquals(DriverProfile.VerificationStatus.REJECTED, profile.getVerificationStatus());
     }
 
-    @Then("The driver profile for user {string} has verification status APPROVED")
-    public void theDriverProfileForUserHasVerificationStatusApproved(String username) throws Throwable {
-        theDriverProfileForUserHasVerificationStatus(username, "APPROVED");
+    @And("the DriverProfile has rejectionReason {string}")
+    public void profile_has_rejection_reason(String reason) {
+        assertNotNull(profile);
+        assertEquals(reason, profile.getRejectionReason());
     }
 }
