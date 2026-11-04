@@ -72,6 +72,9 @@ public class User extends UriEntity<Long> implements UserDetails {
 	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
 	private Status status = Status.PENDING_EMAIL;
 
+	@Column(length = 256)
+	private String verificationToken;
+
 	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
 	private ZonedDateTime emailVerifiedAt;
 
