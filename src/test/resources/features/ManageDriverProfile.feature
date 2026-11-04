@@ -13,6 +13,12 @@ Feature: Manage Driver Profile
         Then The response code is 201
         And The new driver profile is owned by "user@sample.app"
 
+    Scenario: A new driver profile always starts as PENDING
+        Given I login as "user@sample.app" with password "password"
+        When I create a new driver profile with verification status "APPROVED"
+        Then The response code is 201
+        And The new driver profile has verification status "PENDING"
+
     Scenario: Owner can retrieve their driver profile
         Given I login as "user@sample.app" with password "password"
         And There is a driver profile for user "user@sample.app"
