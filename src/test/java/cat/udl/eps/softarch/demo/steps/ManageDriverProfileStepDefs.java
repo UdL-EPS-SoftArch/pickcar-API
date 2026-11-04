@@ -59,6 +59,33 @@ public class ManageDriverProfileStepDefs {
             .andDo(print());
     }
 
+    @When("I create a new driver profile with verification status {string}")
+    public void iCreateANewDriverProfileWithStatus(String status) throws Throwable {
+        DriverProfile profile = new DriverProfile();
+        profile.setLicenceFrontDoc("front-doc");
+        profile.setLicenceBackDoc("back-doc");
+        profile.setVerificationStatus(DriverProfile.VerificationStatus.valueOf(status));
+        stepDefs.result = stepDefs.mockMvc.perform(
+                post("/driverProfiles")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(stepDefs.mapper.writeValueAsString(profile))
+                    .characterEncoding(StandardCharsets.UTF_8)
+                    .accept(MediaType.APPLICATION_JSON)
+                    .with(AuthenticationStepDefs.authenticate()))
+            .andDo(print());
+    }
+
+    @And("The new driver profile has verification status {string}")
+    public void theNewDriverProfileHasStatus(String status) throws Throwable {
+        String uri = stepDefs.result.andReturn().getResponse().getHeader("Location");
+        stepDefs.mockMvc.perform(
+                get(uri)
+                    .accept(MediaType.APPLICATION_JSON)
+                    .with(AuthenticationStepDefs.authenticate()))
+            .andDo(print())
+            .andExpect(jsonPath("$.verificationStatus", is(status)));
+    }
+
     @When("I retrieve the driver profile for user {string}")
     public void iRetrieveTheDriverProfileForUser(String email) throws Throwable {
         stepDefs.result = stepDefs.mockMvc.perform(
