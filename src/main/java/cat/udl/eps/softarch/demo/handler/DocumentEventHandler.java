@@ -20,9 +20,31 @@ public class DocumentEventHandler {
 
     @HandleBeforeCreate
     public void handleDocumentPreCreate(Document document) {
+        // File type validation
+        String contentType = document.getContentType();
+        if (contentType == null || !isAllowedContentType(contentType)) {
+            throw new IllegalArgumentException("Invalid file type: " + contentType);
+        }
+        
+        // File size validation (max 10 MB)
+        Long fileSize = document.getFileSize();
+        if (fileSize == null || fileSize > 10_485_760) { // 10 MB in bytes
+            throw new IllegalArgumentException("File size exceeds the maximum allowed size of 10 MB");
+        }
+        
         User uploader = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         document.setUploadedBy(uploader);
         document.setStatus(Document.Status.UPLOADED);
+    }
+    
+    private boolean isAllowedContentType(String contentType) {
+        // Allow common image and PDF file types
+        return contentType.equals("image/jpeg") ||
+               contentType.equals("image/png") ||
+               contentType.equals("image/gif") ||
+               contentType.equals("application/pdf") ||
+               contentType.equals("application/msword") ||
+               contentType.equals("application/vnd.openxmlformats-officedocument.wordprocessingml.document");
     }
 
     // Stored documents are immutable for their uploader; only an admin can review them
