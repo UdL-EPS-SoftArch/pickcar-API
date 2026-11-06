@@ -51,3 +51,18 @@ Feature: Endpoint security
             | path                                 |
             | /records/search/findByName?name=x    |
             | /documents/search/findByFileName?fileName=x |
+
+    Scenario Outline: Email tokens are never exposed over REST
+        Given I login as "user@sample.app" with password "password"
+        When I send a GET request to "<path>"
+        Then The response code is 404
+
+        Examples:
+            | path          |
+            | /emailTokens  |
+            | /emailTokens/1 |
+
+    Scenario: Anonymous users cannot read email tokens
+        Given I'm not logged in
+        When I send a GET request to "/emailTokens"
+        Then The response code is 401
