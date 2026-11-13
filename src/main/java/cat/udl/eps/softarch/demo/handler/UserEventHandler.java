@@ -20,7 +20,12 @@ import org.springframework.transaction.annotation.Transactional;
 
 import org.springframework.data.rest.core.RepositoryConstraintViolationException;
 import org.springframework.validation.BeanPropertyBindingResult;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.validation.Errors;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 import org.springframework.validation.Validator;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
@@ -35,6 +40,7 @@ import java.time.temporal.ChronoUnit;
 @RepositoryEventHandler
 public class UserEventHandler {
 
+    public static final String CURRENT_PASSWORD_HEADER = "X-Current-Password";
     private static final SecureRandom SECURE_RANDOM = new SecureRandom();
 
     final Logger logger = LoggerFactory.getLogger(User.class);
@@ -92,6 +98,7 @@ public class UserEventHandler {
         // Hash only if the password differs from the stored hash (i.e. it has been changed)
         String stored = user.getId() == null ? null : userRepository.findPasswordHashById(user.getId()).orElse(null);
         if (stored == null || !stored.equals(user.getPassword())) {
+            requireCurrentPassword(user, stored);
             validatePlaintext(user);
             user.encodePassword();
         }
@@ -120,6 +127,23 @@ public class UserEventHandler {
     @HandleAfterLinkSave
     public void handleUserPostLinkSave(User user, Object o) {
         logger.info("After linking user {}", user.getId());
+    }
+
+    private void requireCurrentPassword(User user, String storedHash) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        boolean admin = auth != null && auth.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+        if (admin) {
+            return;
+        }
+        // Spring Data REST ignores transient properties on PATCH, so it is sent as a header
+        String current = null;
+        if (RequestContextHolder.getRequestAttributes() instanceof ServletRequestAttributes attrs) {
+            current = attrs.getRequest().getHeader(CURRENT_PASSWORD_HEADER);
+        }
+        if (storedHash == null || current == null || !User.passwordEncoder.matches(current, storedHash)) {
+            throw new AccessDeniedException("Current password is required to change the password");
+        }
     }
 
     private void validatePlaintext(User user) {

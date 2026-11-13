@@ -21,7 +21,6 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import org.springframework.test.context.web.WebAppConfiguration;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
-import org.springframework.test.context.junit.jupiter.SpringContextContextLoader;
 import org.springframework.boot.test.context.SpringBootContextLoader;
 
 import java.time.ZonedDateTime;
@@ -39,6 +38,9 @@ public class VerifyEmailStepDefs {
     @Autowired
     private EmailTokenRepository emailTokenRepository;
 
+    @Autowired
+    private cat.udl.eps.softarch.demo.service.EmailVerificationService emailVerificationService;
+
     private String verificationToken;
 
     @Given("There is a registered user with email {string}")
@@ -46,6 +48,8 @@ public class VerifyEmailStepDefs {
         User user = userRepository.findByEmail(email).orElseGet(() -> {
             User u = new User();
             u.setEmail(email);
+            u.setPassword("password");
+            u.encodePassword();
             u.setRole(User.Role.DRIVER);
             u.setStatus(User.Status.PENDING_EMAIL);
             // Generate verification token like UserEventHandler does
@@ -59,10 +63,10 @@ public class VerifyEmailStepDefs {
             emailToken.setExpiresAt(expiresAt);
             emailToken.setType(EmailToken.TokenType.EMAIL_VERIFICATION);
             emailToken.setStatus(EmailToken.VerificationStatus.PENDING);
-            emailToken.setUser(u);
+            User saved = userRepository.save(u);
+            emailToken.setUser(saved);
             emailTokenRepository.save(emailToken);
-            user.setVerificationToken(token);
-            return userRepository.save(u);
+            return saved;
         });
         verificationToken = user.getVerificationToken();
     }
@@ -72,29 +76,28 @@ public class VerifyEmailStepDefs {
         assertNotNull(verificationToken, "Verification token should be set");
     }
 
+    @Given("The user has a pending verification token that has expired")
+    public void theUserHasAPendingVerificationTokenThatHasExpired() {
+        EmailToken token = emailTokenRepository.findByToken(verificationToken);
+        assertNotNull(token, "Verification token should exist");
+        token.setExpiresAt(ZonedDateTime.now().minusHours(1));
+        emailTokenRepository.save(token);
+    }
+
     @When("I verify the email with a valid token")
     public void iVerifyTheEmailWithAValidToken() {
-        // Use the EmailVerificationService to verify the token
-        // This would typically be called from a REST endpoint
-        // For now, we test the service directly via Spring context
-        // The actual REST endpoint would call this service
-        assertNotNull(verificationToken, "Verification token should be set");
+        emailVerificationService.verifyToken(verificationToken);
     }
 
     @When("I verify the email with an expired token")
+    @When("I verify the email with the expired token")
     public void iVerifyTheEmailWithAnExpiredToken() {
-        // Mark token as expired in the repository
-        EmailToken token = emailTokenRepository.findByToken(verificationToken);
-        if (token != null) {
-            token.setStatus(VerificationStatus.EXPIRED);
-            emailTokenRepository.save(token);
-        }
+        emailVerificationService.verifyToken(verificationToken);
     }
 
     @When("I verify the email with an invalid token")
     public void iVerifyTheEmailWithAnInvalidToken() {
-        // Test with a token that doesn't exist
-        // The service would handle this case
+        emailVerificationService.verifyToken("does-not-exist");
     }
 
     @Then("The user status should be ACTIVE")
