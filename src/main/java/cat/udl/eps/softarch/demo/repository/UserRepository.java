@@ -30,4 +30,9 @@ public interface UserRepository extends CrudRepository<User, Long>, PagingAndSor
   // Internal lookup (authentication, tests); not exported to avoid leaking registered emails
   @RestResource(exported = false)
   Optional<User> findByEmail(String email);
+
+  // Internal lookup of the stored password hash, used to detect password changes
+  @RestResource(exported = false)
+  @Query("SELECT u.password FROM User u WHERE u.id = :id")
+  Optional<String> findPasswordHashById(@Param("id") Long id);
 }

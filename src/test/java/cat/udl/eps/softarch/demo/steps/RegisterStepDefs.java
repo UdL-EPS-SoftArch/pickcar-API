@@ -175,4 +175,41 @@ public class RegisterStepDefs {
   public void theUserStillExists(String email) {
     assertTrue(userRepository.findByEmail(email).isPresent());
   }
+
+  @When("I change the password of user {string} to {string}")
+  public void iChangeThePasswordOfUser(String email, String password) throws Throwable {
+    patchUser(email, Map.of("password", password), null);
+  }
+
+  @When("I change the password of user {string} to {string} providing current password {string}")
+  public void iChangeThePasswordWithCurrent(String email, String password, String current) throws Throwable {
+    patchUser(email, Map.of("password", password), current);
+  }
+
+  @When("I change the full name of user {string} to {string}")
+  public void iChangeTheFullNameOfUser(String email, String fullName) throws Throwable {
+    patchUser(email, Map.of("fullName", fullName), null);
+  }
+
+  @And("The stored password of user {string} is hashed")
+  public void theStoredPasswordIsHashed(String email) {
+    String stored = userRepository.findByEmail(email).orElseThrow().getPassword();
+    assertTrue(stored.startsWith("$2"), "Password must be stored as a BCrypt hash");
+  }
+
+  private void patchUser(String email, Map<String, String> body, String currentPassword) throws Throwable {
+    User user = userRepository.findByEmail(email).orElseThrow();
+    var request = patch(user.getUri());
+    if (currentPassword != null) {
+      request.header("X-Current-Password", currentPassword);
+    }
+    stepDefs.result = stepDefs.mockMvc.perform(
+            request
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(stepDefs.mapper.writeValueAsString(body))
+                    .characterEncoding(StandardCharsets.UTF_8)
+                    .accept(MediaType.APPLICATION_JSON)
+                    .with(AuthenticationStepDefs.authenticate()))
+            .andDo(print());
+  }
 }
