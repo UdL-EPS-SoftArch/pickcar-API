@@ -57,9 +57,6 @@ public class User extends UriEntity<Long> implements UserDetails {
 	@ToString.Exclude
 	private String password;
 
-	@JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
-	private boolean passwordReset;
-
 	private String fullName;
 
 	private String phone;
@@ -83,6 +80,7 @@ public class User extends UriEntity<Long> implements UserDetails {
 	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
 	private Instant created;
 
+	/** Password submitted by the client is stored only as a BCrypt hash. */
 	public void encodePassword() {
 		this.password = passwordEncoder.encode(this.password);
 	}

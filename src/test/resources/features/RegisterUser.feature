@@ -104,3 +104,15 @@ Feature: Register User
     Given I'm not logged in
     When I list all users
     Then The response code is 401
+
+  Scenario: Password change and later update of another field keep the password valid
+    Given There is a registered user with email "user@sample.app" and password "password"
+    And I login as "user@sample.app" with password "password"
+    When I change the password of user "user@sample.app" to "newpassword1"
+    Then The response code is 200
+    And I cannot login with email "user@sample.app" and password "password"
+    And I can login with email "user@sample.app" and password "newpassword1"
+    When I change the full name of user "user@sample.app" to "John Doe"
+    Then The response code is 200
+    And I can login with email "user@sample.app" and password "newpassword1"
+    And The stored password of user "user@sample.app" is hashed

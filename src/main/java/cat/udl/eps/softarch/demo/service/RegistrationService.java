@@ -45,6 +45,8 @@ public class RegistrationService {
         User user = new User();
         user.setEmail(email);
         user.setPassword(password);
+        // Repository.save() does not fire Spring Data REST events, so hash explicitly
+        user.encodePassword();
 
         // Save user - Spring Data REST @RepositoryEventHandler (UserEventHandler) will:
         // - @HandleBeforeCreate: set role=DRIVER, status=PENDING_EMAIL, generate verification token, encode password
