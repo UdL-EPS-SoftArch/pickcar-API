@@ -1,18 +1,17 @@
 package cat.udl.eps.softarch.demo.config;
+
 import cat.udl.eps.softarch.demo.domain.Record;
 import cat.udl.eps.softarch.demo.domain.User;
 import cat.udl.eps.softarch.demo.repository.RecordRepository;
 import cat.udl.eps.softarch.demo.repository.UserRepository;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
 import org.springframework.core.env.Environment;
 import jakarta.annotation.PostConstruct;
 
 @Configuration
+@Profile({"dev", "test"})
 public class DBInitialization {
-    @Value("${default-password}")
-    String defaultPassword;
-
     private final RecordRepository recordRepository;
     private final UserRepository userRepository;
     private final Environment environment;
@@ -26,12 +25,12 @@ public class DBInitialization {
 
     @PostConstruct
     public void initializeDatabase() {
-        // Default user
+        // Default user (only in dev/test profiles, not in production)
         if (userRepository.findByEmail("demo@sample.app").isEmpty()) {
             User user = new User();
             user.setEmail("demo@sample.app");
             user.setStatus(User.Status.ACTIVE);
-            user.setPassword(defaultPassword);
+            user.setPassword("password");
             user.encodePassword();
             userRepository.save(user);
         }
@@ -42,14 +41,14 @@ public class DBInitialization {
                 admin.setEmail("admin@sample.app");
                 admin.setRole(User.Role.ADMIN);
                 admin.setStatus(User.Status.ACTIVE);
-                admin.setPassword(defaultPassword);
+                admin.setPassword("password");
                 admin.encodePassword();
                 userRepository.save(admin);
             }
             if (userRepository.findByEmail("test@sample.app").isEmpty()) {
                 User user = new User();
                 user.setEmail("test@sample.app");
-                user.setPassword(defaultPassword);
+                user.setPassword("password");
                 user.encodePassword();
                 user = userRepository.save(user);
                 cat.udl.eps.softarch.demo.domain.Record record = new Record();
