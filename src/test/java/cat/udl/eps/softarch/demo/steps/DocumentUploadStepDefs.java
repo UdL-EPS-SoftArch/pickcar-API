@@ -81,6 +81,24 @@ public class DocumentUploadStepDefs {
         }
     }
 
+    @When("I upload the licence front {string} of type {string} and size {int} bytes")
+    public void iUploadFrontWithSize(String name, String type, int size) {
+        try {
+            service.uploadLicenceFront(profileId, new MockMultipartFile("file", name, type, new byte[size]));
+        } catch (Exception e) {
+            error = e;
+        }
+    }
+
+    @When("I validate a licence front {string} of type {string} without a back side")
+    public void iValidateFrontOnly(String name, String type) {
+        try {
+            service.validateLicenceFiles(file(name, type), null);
+        } catch (Exception e) {
+            error = e;
+        }
+    }
+
     @When("I validate an empty licence front and a back {string} of type {string}")
     public void iValidateEmptyFront(String name, String type) {
         try {
@@ -108,10 +126,20 @@ public class DocumentUploadStepDefs {
         assertEquals(profileId, doc.getEntityId());
     }
 
-    @And("the profile licence front references that document")
-    public void theProfileReferencesDocument() {
-        Document doc = documentRepository.findByFileName("front.png").stream().findFirst().orElseThrow();
-        assertEquals(String.valueOf(doc.getId()), profile().getLicenceFrontDoc());
+    @And("the profile licence {word} references document {string}")
+    public void theProfileReferencesDocument(String side, String name) {
+        Document doc = documentRepository.findByFileName(name).stream().findFirst().orElseThrow();
+        String reference = switch (side) {
+            case "front" -> profile().getLicenceFrontDoc();
+            case "back" -> profile().getLicenceBackDoc();
+            default -> throw new IllegalArgumentException("Unknown licence side: " + side);
+        };
+        assertEquals(String.valueOf(doc.getId()), reference);
+    }
+
+    @And("no document {string} is stored")
+    public void noDocumentIsStored(String name) {
+        assertTrue(documentRepository.findByFileName(name).isEmpty());
     }
 
     @Then("the licence upload fails with {string}")
