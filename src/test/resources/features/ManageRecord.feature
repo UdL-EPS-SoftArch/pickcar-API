@@ -62,3 +62,44 @@ Feature: Manage Record
         Given I login as "another@sample.app" with password "password"
         When I delete the record with name "Existing Record"
         Then The response code is 404
+
+    Scenario: Non-owner cannot edit a public record
+        Given There is a public record with name "Public Record" owned by "user@sample.app"
+        And I login as "another@sample.app" with password "password"
+        When I edit the record with name "Public Record" to have name "Stolen Record"
+        Then The response code is 403
+        And The record with name "Public Record" is owned by "user@sample.app"
+
+    Scenario: Non-owner cannot replace a public record
+        Given There is a public record with name "Public Record" owned by "user@sample.app"
+        And I login as "another@sample.app" with password "password"
+        When I replace the record with name "Public Record" with name "Stolen Record"
+        Then The response code is 403
+
+    Scenario: Non-owner cannot delete a public record
+        Given There is a public record with name "Public Record" owned by "user@sample.app"
+        And I login as "another@sample.app" with password "password"
+        When I delete the record with name "Public Record"
+        Then The response code is 403
+        And The record with name "Public Record" is owned by "user@sample.app"
+
+    Scenario: A user cannot take ownership of a public record
+        Given There is a public record with name "Public Record" owned by "user@sample.app"
+        And I login as "another@sample.app" with password "password"
+        When I set myself as owner of the record with name "Public Record"
+        Then The response code is 403
+        And The record with name "Public Record" is owned by "user@sample.app"
+
+    Scenario: An admin can edit and delete another user's record
+        Given There is a public record with name "Admin Managed Record" owned by "user@sample.app"
+        And I login as "admin@sample.app" with password "password"
+        When I edit the record with name "Admin Managed Record" to have name "Admin Edited Record"
+        Then The response code is 200
+        When I delete the record with name "Admin Edited Record"
+        Then The response code is 204
+
+    Scenario: A public record without an owner does not cause a server error
+        Given There is a public record with name "Orphan Record" without an owner
+        And I login as "another@sample.app" with password "password"
+        When I edit the record with name "Orphan Record" to have name "Edited Orphan"
+        Then The response code is 404

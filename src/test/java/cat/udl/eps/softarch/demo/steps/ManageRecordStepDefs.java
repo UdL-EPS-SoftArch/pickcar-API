@@ -1,5 +1,6 @@
 package cat.udl.eps.softarch.demo.steps;
 
+import cat.udl.eps.softarch.demo.config.SystemAuthentication;
 import cat.udl.eps.softarch.demo.domain.Record;
 import cat.udl.eps.softarch.demo.domain.User;
 import cat.udl.eps.softarch.demo.repository.RecordRepository;
@@ -23,6 +24,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 
@@ -45,7 +47,7 @@ public class ManageRecordStepDefs {
         User owner = userRepository.findByEmail(ownerEmail).orElseThrow();
         record.setOwnedBy(owner);
         record.setStatus(Record.Status.PRIVATE);
-        recordRepository.save(record);
+        SystemAuthentication.runAsSystem(() -> recordRepository.save(record));
     }
 
     @When("I create a new record with name {string}")
@@ -149,5 +151,55 @@ public class ManageRecordStepDefs {
                 delete(record.getUri())
                     .with(AuthenticationStepDefs.authenticate()))
             .andDo(print());
+    }
+
+    @Given("There is a public record with name {string} owned by {string}")
+    public void thereIsAPublicRecordWithNameOwnedBy(String name, String ownerEmail) {
+        Record record = new Record();
+        record.setName(name);
+        record.setStatus(Record.Status.PUBLIC);
+        record.setOwnedBy(userRepository.findByEmail(ownerEmail).orElseThrow());
+        SystemAuthentication.runAsSystem(() -> recordRepository.save(record));
+    }
+
+    @Given("There is a public record with name {string} without an owner")
+    public void thereIsAPublicRecordWithoutAnOwner(String name) {
+        Record record = new Record();
+        record.setName(name);
+        record.setStatus(Record.Status.PUBLIC);
+        SystemAuthentication.runAsSystem(() -> recordRepository.save(record));
+    }
+
+    @When("I replace the record with name {string} with name {string}")
+    public void iReplaceRecordWithName(String currentName, String newName) throws Throwable {
+        Record record = recordRepository.findByName(currentName).stream().findFirst().orElseThrow();
+        stepDefs.result = stepDefs.mockMvc.perform(
+                put(record.getUri())
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(stepDefs.mapper.writeValueAsString(Map.of("name", newName)))
+                    .characterEncoding(StandardCharsets.UTF_8)
+                    .accept(MediaType.APPLICATION_JSON)
+                    .with(AuthenticationStepDefs.authenticate()))
+            .andDo(print());
+    }
+
+    @When("I set myself as owner of the record with name {string}")
+    public void iSetMyselfAsOwnerOfRecord(String name) throws Throwable {
+        Record record = recordRepository.findByName(name).stream().findFirst().orElseThrow();
+        User me = userRepository.findByEmail(AuthenticationStepDefs.currentUsername).orElseThrow();
+        stepDefs.result = stepDefs.mockMvc.perform(
+                patch(record.getUri())
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(stepDefs.mapper.writeValueAsString(Map.of("ownedBy", me.getUri())))
+                    .characterEncoding(StandardCharsets.UTF_8)
+                    .accept(MediaType.APPLICATION_JSON)
+                    .with(AuthenticationStepDefs.authenticate()))
+            .andDo(print());
+    }
+
+    @Then("The record with name {string} is owned by {string}")
+    public void theRecordWithNameIsOwnedBy(String name, String ownerEmail) {
+        Record record = recordRepository.findByName(name).stream().findFirst().orElseThrow();
+        assertThat(record.getOwnedBy().getEmail(), is(ownerEmail));
     }
 }
