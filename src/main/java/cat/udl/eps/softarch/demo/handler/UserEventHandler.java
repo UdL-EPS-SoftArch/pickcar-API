@@ -3,6 +3,7 @@ package cat.udl.eps.softarch.demo.handler;
 import cat.udl.eps.softarch.demo.domain.EmailToken;
 import cat.udl.eps.softarch.demo.domain.User;
 import cat.udl.eps.softarch.demo.repository.EmailTokenRepository;
+import cat.udl.eps.softarch.demo.service.VerificationEmailService;
 import cat.udl.eps.softarch.demo.repository.UserRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -50,7 +51,11 @@ public class UserEventHandler {
 
     final Validator validator;
 
-    public UserEventHandler(UserRepository userRepository, EmailTokenRepository emailTokenRepository, Validator validator) {
+    final VerificationEmailService verificationEmailService;
+
+    public UserEventHandler(UserRepository userRepository, EmailTokenRepository emailTokenRepository, Validator validator,
+                            VerificationEmailService verificationEmailService) {
+        this.verificationEmailService = verificationEmailService;
         this.validator = validator;
         this.userRepository = userRepository;
         this.emailTokenRepository = emailTokenRepository;
@@ -90,6 +95,8 @@ public class UserEventHandler {
         emailToken.setUser(user);
 
         emailTokenRepository.save(emailToken);
+
+        verificationEmailService.sendVerificationEmail(user.getEmail(), emailToken.getToken(), 24);
     }
 
     @HandleBeforeSave
