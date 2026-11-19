@@ -36,3 +36,24 @@ Feature: Manage Driver Profile
         And There is a driver profile for user "user@sample.app"
         When I edit the licence front document of the driver profile for user "user@sample.app"
         Then The response code is 404
+
+    Scenario: A driver cannot self-approve via PATCH
+        Given I login as "user@sample.app" with password "password"
+        And There is a driver profile for user "user@sample.app"
+        When I try to change the verification status of the driver profile for user "user@sample.app" to "APPROVED"
+        Then The response code is 200
+        And The driver profile for user "user@sample.app" has verification status "PENDING"
+
+    Scenario: A driver cannot set a rejection reason via PATCH
+        Given I login as "user@sample.app" with password "password"
+        And There is a driver profile for user "user@sample.app"
+        When I try to set the rejection reason of the driver profile for user "user@sample.app" to "Invalid licence"
+        Then The response code is 200
+        And The driver profile for user "user@sample.app" has no rejection reason
+
+    Scenario: A driver cannot reassign the profile to another user via PATCH
+        Given I login as "user@sample.app" with password "password"
+        And There is a driver profile for user "user@sample.app"
+        When I try to reassign the driver profile for user "user@sample.app" to "another@sample.app"
+        Then The response code is 200
+        And The driver profile for user "user@sample.app" is still owned by "user@sample.app"
