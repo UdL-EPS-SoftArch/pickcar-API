@@ -5,6 +5,7 @@ import cat.udl.eps.softarch.demo.repository.DriverProfileRepository;
 import cat.udl.eps.softarch.demo.repository.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -61,6 +62,7 @@ public class DriverProfileService {
      * Only profiles in PENDING state can be approved.
      */
     @Transactional
+    @PreAuthorize("hasRole('ADMIN')")
     public DriverProfile approveProfile(Long profileId) {
         DriverProfile profile = getProfileById(profileId);
         if (profile.getVerificationStatus() != DriverProfile.VerificationStatus.PENDING) {
@@ -75,6 +77,7 @@ public class DriverProfileService {
      * A rejection reason is required.
      */
     @Transactional
+    @PreAuthorize("hasRole('ADMIN')")
     public DriverProfile rejectProfile(Long profileId, String rejectionReason) {
         DriverProfile profile = getProfileById(profileId);
         if (profile.getVerificationStatus() != DriverProfile.VerificationStatus.PENDING) {

@@ -31,12 +31,15 @@ public class DriverProfile extends UriEntity<Long> {
 
     @OneToOne
     @JsonIdentityReference(alwaysAsId = true)
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     private User user;
 
     @Enumerated(EnumType.STRING)
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     private VerificationStatus verificationStatus = VerificationStatus.PENDING;
 
     @Length(max = 500)
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     private String rejectionReason;
 
     @NotBlank

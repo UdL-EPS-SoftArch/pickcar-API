@@ -9,11 +9,13 @@ import io.cucumber.java.en.And;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.Given;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.AccessDeniedException;
 
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class DriverProfileStepDefs {
 
@@ -24,6 +26,7 @@ public class DriverProfileStepDefs {
     private UserRepository userRepository;
 
     private DriverProfile profile;
+    private AccessDeniedException deniedException;
 
     @Given("the application is running")
     public void the_application_is_running() {
@@ -108,5 +111,33 @@ public class DriverProfileStepDefs {
     public void profile_has_rejection_reason(String reason) {
         assertNotNull(profile);
         assertEquals(reason, profile.getRejectionReason());
+    }
+
+    @When("I try to approve the DriverProfile")
+    public void i_try_to_approve_the_profile() {
+        deniedException = assertThrows(AccessDeniedException.class,
+                () -> driverProfileService.approveProfile(profile.getId()));
+    }
+
+    @When("I try to reject the DriverProfile")
+    public void i_try_to_reject_the_profile() {
+        deniedException = assertThrows(AccessDeniedException.class,
+                () -> driverProfileService.rejectProfile(profile.getId(), "Invalid licence"));
+    }
+
+    @Then("the approval is denied")
+    public void the_approval_is_denied() {
+        assertNotNull(deniedException);
+    }
+
+    @Then("the rejection is denied")
+    public void the_rejection_is_denied() {
+        assertNotNull(deniedException);
+    }
+
+    @Then("the DriverProfile still has status PENDING")
+    public void the_profile_still_has_status_pending() {
+        assertNotNull(profile);
+        assertEquals(DriverProfile.VerificationStatus.PENDING, profile.getVerificationStatus());
     }
 }

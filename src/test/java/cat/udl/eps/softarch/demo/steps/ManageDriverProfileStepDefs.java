@@ -11,6 +11,8 @@ import org.springframework.http.MediaType;
 
 import java.nio.charset.StandardCharsets;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.hamcrest.Matchers.is;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
@@ -116,5 +118,47 @@ public class ManageDriverProfileStepDefs {
                     .with(AuthenticationStepDefs.authenticate()))
             .andDo(print())
             .andExpect(jsonPath("$.email", is(email)));
+    }
+
+    @When("I try to change the verification status of the driver profile for user {string} to {string}")
+    public void iTryToChangeVerificationStatus(String email, String status) throws Throwable {
+        patchProfile(email, "{\"verificationStatus\":\"" + status + "\"}");
+    }
+
+    @When("I try to set the rejection reason of the driver profile for user {string} to {string}")
+    public void iTryToSetRejectionReason(String email, String reason) throws Throwable {
+        patchProfile(email, "{\"rejectionReason\":\"" + reason + "\"}");
+    }
+
+    @When("I try to reassign the driver profile for user {string} to {string}")
+    public void iTryToReassignProfile(String email, String newOwnerEmail) throws Throwable {
+        User newOwner = userRepository.findByEmail(newOwnerEmail).orElseThrow();
+        patchProfile(email, "{\"user\":\"" + newOwner.getUri() + "\"}");
+    }
+
+    private void patchProfile(String email, String content) throws Throwable {
+        stepDefs.result = stepDefs.mockMvc.perform(
+                patch(profileOf(email).getUri())
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(content)
+                    .characterEncoding(StandardCharsets.UTF_8)
+                    .accept(MediaType.APPLICATION_JSON)
+                    .with(AuthenticationStepDefs.authenticate()))
+            .andDo(print());
+    }
+
+    @And("The driver profile for user {string} has verification status {string}")
+    public void theProfileHasVerificationStatus(String email, String status) {
+        assertEquals(status, profileOf(email).getVerificationStatus().name());
+    }
+
+    @And("The driver profile for user {string} has no rejection reason")
+    public void theProfileHasNoRejectionReason(String email) {
+        assertNull(profileOf(email).getRejectionReason());
+    }
+
+    @And("The driver profile for user {string} is still owned by {string}")
+    public void theProfileIsStillOwnedBy(String email, String ownerEmail) {
+        assertEquals(ownerEmail, profileOf(email).getUser().getEmail());
     }
 }
