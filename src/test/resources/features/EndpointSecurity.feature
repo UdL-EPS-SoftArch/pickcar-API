@@ -42,6 +42,18 @@ Feature: Endpoint security
             | PATCH  |
             | DELETE |
 
+    Scenario Outline: The owner cannot write the ownedBy association of a real record
+        Given There is a public record with name "Associated Record" owned by "user@sample.app"
+        And I login as "user@sample.app" with password "password"
+        When I send a <method> request to change the owner of the record with name "Associated Record"
+        Then The response code is 403
+
+        Examples:
+            | method |
+            | PUT    |
+            | PATCH  |
+            | DELETE |
+
     Scenario Outline: Unexported finders are not available
         Given I login as "user@sample.app" with password "password"
         When I send a GET request to "<path>"

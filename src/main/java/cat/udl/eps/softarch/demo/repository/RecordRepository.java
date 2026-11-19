@@ -12,6 +12,7 @@ import org.springframework.data.repository.PagingAndSortingRepository;
 import org.springframework.data.repository.query.Param;
 import org.springframework.data.rest.core.annotation.RepositoryRestResource;
 import org.springframework.data.rest.core.annotation.RestResource;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 import java.util.List;
 import java.util.Optional;
@@ -47,4 +48,15 @@ public interface RecordRepository extends CrudRepository<Record, Long>, PagingAn
 
     @RestResource(exported = false)
     List<Record> findByName(String name);
+
+    // Authorize writes against the entity passed by Spring Data REST, so a client cannot
+    // change the owner in the request body and pass the check. Internal callers must use
+    // SystemAuthentication.runAsSystem (see DBInitialization and test fixtures).
+    @Override
+    @PreAuthorize("hasRole('ADMIN') or #entity.ownedBy?.email == authentication.name")
+    <S extends Record> S save(@Param("entity") S entity);
+
+    @Override
+    @PreAuthorize("hasRole('ADMIN') or #record.ownedBy?.email == authentication.name")
+    void delete(@Param("record") Record record);
 }

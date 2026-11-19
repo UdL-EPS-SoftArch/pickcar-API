@@ -50,6 +50,7 @@ public class Record extends UriEntity<Long> {
 
     @ManyToOne
     @JsonIdentityReference(alwaysAsId = true)
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     private User ownedBy;
 
 

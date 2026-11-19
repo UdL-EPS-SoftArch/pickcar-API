@@ -55,7 +55,7 @@ public class DBInitialization {
                 record.setName("My test record");
                 record.setDescription("A record used for testing purposes, nothing more, nothing less...");
                 record.setOwnedBy(user);
-                recordRepository.save(record);
+                SystemAuthentication.runAsSystem(() -> recordRepository.save(record));
             }
         }
     }
