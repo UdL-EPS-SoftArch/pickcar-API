@@ -9,7 +9,7 @@ This skill provides AI agents with test execution and failure diagnostic instruc
 
 ## Verification Command
 ```bash
-mvn test -Dtest=CucumberTest
+mvn clean test -Dtest=CucumberTest
 ```
 
 ## Failure Diagnosis Routine

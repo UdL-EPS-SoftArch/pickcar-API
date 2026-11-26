@@ -10,13 +10,13 @@ Development is strictly guided by **Behavior-Driven Development (BDD)** scenario
 1. **Spec Phase**: Write executable Cucumber `.feature` files.
 2. **Red Phase**: Write failing step definitions (`*StepDefs.java`).
 3. **Green Phase**: Implement domain entities, `@RepositoryEventHandler` classes, and `@RepositoryRestResource` interfaces.
-4. **Verify Phase**: Execute `mvn test -Dtest=CucumberTest`.
+4. **Verify Phase**: Execute `mvn clean test -Dtest=CucumberTest`.
 
 The project provides **5 modular skill playbooks** in `skills/`:
 - `skills/sdd-feature-designer/SKILL.md`
 - `skills/sdd-cucumber-steps/SKILL.md`
 - `skills/spring-datarest-entity/SKILL.md`
-- `skills/spring-datarest-repository/SKILL.md`
+- `skills/spring-datarest-handler/SKILL.md`
 - `skills/sdd-bdd-verifier/SKILL.md`
 
 ---
@@ -37,7 +37,7 @@ When using AI harnesses with high token context limits, agents can read project 
    - Creates `ManageCommentStepDefs.java` using `sdd-cucumber-steps`.
    - Creates `Comment.java` and `CommentRepository.java` using `spring-datarest-entity`.
    - Creates `CommentEventHandler.java` using `spring-datarest-handler`.
-   - Runs `mvn test -Dtest=CucumberTest` using `sdd-bdd-verifier`.
+   - Runs `mvn clean test -Dtest=CucumberTest` using `sdd-bdd-verifier`.
 
 ---
 
@@ -75,7 +75,7 @@ max-chat-history-tokens: 2000                   # aggressively trims conversatio
 cache-prompts: true
 
 # Behavior
-test-cmd: "mvn test -Dtest=CucumberTest"
+test-cmd: "mvn clean test -Dtest=CucumberTest"
 auto-test: false
 auto-commits: true
 auto-lint: false
@@ -169,7 +169,7 @@ Before starting Stage 2, drop files from Stage 1 to free up tokens:
 
 ---
 
-#### Stage 3: Implement Tag Domain Entity, Repository Repository with SpEL Security
+#### Stage 3: Implement Tag Domain Entity and Repository with SpEL Security
 Drop previous step definitions from session context:
 
 1. **Reset context for Stage 3**:
@@ -201,15 +201,15 @@ Drop domain entity files from session context:
    ```
    /drop skills/spring-datarest-entity/SKILL.md
    /drop src/main/java/cat/udl/eps/softarch/demo/domain/Record.java
-   /drop src/main/java/cat/udl/eps/softarch/demo/domain/RecordRepository.java
+   /drop src/main/java/cat/udl/eps/softarch/demo/repository/RecordRepository.java
    ```
 
-2. **Load repository skill and reference repository**:
+2. **Load handler skill and reference repository**:
    ```
    /read skills/spring-datarest-handler/SKILL.md
    /read src/main/java/cat/udl/eps/softarch/demo/domain/Tag.java
-   /read src/main/java/cat/udl/eps/softarch/demo/domain/TagRepository.java
-   /read src/main/java/cat/udl/eps/softarch/demo/repository/RecordEventHandler.java
+   /read src/main/java/cat/udl/eps/softarch/demo/repository/TagRepository.java
+   /read src/main/java/cat/udl/eps/softarch/demo/handler/RecordEventHandler.java
    /add src/main/java/cat/udl/eps/softarch/demo/handler/TagEventHandler.java
    ```
 
@@ -223,10 +223,10 @@ Execute the Cucumber tests:
 
 1. **Run verification**:
    ```
-   mvn -q test -Dtest=CucumberTest -Dcucumber.plugin=summary -Dsurefire.trimStackTrace=true 
+   mvn -q clean test -Dtest=CucumberTest -Dcucumber.plugin=summary -Dsurefire.trimStackTrace=true 
    ```
 
-The output is also available as an HTML report at `target/cucumber-report.html`. Though it is possible to run the tests directly inside Aider using the `/test` command, it is to big given the context size restrictions.
+The output is also available as an HTML report at `target/cucumber-report.html`. Though it is possible to run the tests directly inside Aider using the `/test` command, it is too big given the context size restrictions.
 
 2. **If a test fails**, drop all files and load only the failure log and failing step class:
    ```

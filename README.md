@@ -62,11 +62,14 @@ classDiagram
         notificationPreferences : JSON
         companyRole : CompanyRole
     }
- 
-    class EmailToken {
-        type : TokenType
-        tokenHash : String
-        expiresAt : ZonedDateTime
+
+    class Record {
+        id: Long
+        name: String
+        description: String
+        created: Instant
+        modified: Instant
+        status: Status
     }
  
     class DriverProfile {
@@ -242,8 +245,8 @@ It is pre-configured with agent skills (`skills/`), repository instructions (`AG
 For complete stage-by-stage instructions and command workflows, see **[AI_DEVELOPMENT_GUIDE.md](AI_DEVELOPMENT_GUIDE.md)**.
 
 ### SDD Agent Skills (`skills/`)
-- **`skills/sdd-feature-designer/SKILL.md`**: Draft Cucumber `.feature` specs for Spring Data REST endpoints (<50 lines).
+- **`skills/sdd-feature-designer/SKILL.md`**: Draft Cucumber `.feature` specs for Spring Data REST endpoints.
 - **`skills/sdd-cucumber-steps/SKILL.md`**: Implement MockMvc step definition classes extending `StepDefs.java`.
 - **`skills/spring-datarest-entity/SKILL.md`**: Create JPA `@Entity` classes extending `UriEntity` and `@RepositoryRestResource` interfaces with SpEL row-level security queries.
-- **`skills/spring-datarest-hander/SKILL.md`**: Create lifecycle event handlers based on the `@RepositoryEventHandler`.
-- **`skills/sdd-bdd-verifier/SKILL.md`**: Run `mvn test -Dtest=CucumberTest` and analyze test failure summaries.
+- **`skills/spring-datarest-handler/SKILL.md`**: Create lifecycle event handlers based on the `@RepositoryEventHandler`.
+- **`skills/sdd-bdd-verifier/SKILL.md`**: Run `mvn clean test -Dtest=CucumberTest` and analyze test failure summaries.

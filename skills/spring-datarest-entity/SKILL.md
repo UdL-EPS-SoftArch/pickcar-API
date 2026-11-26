@@ -71,6 +71,7 @@ import org.springframework.data.repository.CrudRepository;
 import org.springframework.data.repository.PagingAndSortingRepository;
 import org.springframework.data.repository.query.Param;
 import org.springframework.data.rest.core.annotation.RepositoryRestResource;
+import org.springframework.data.rest.core.annotation.RestResource;
 
 import java.util.List;
 import java.util.Optional;
@@ -93,7 +94,9 @@ public interface <Entity>Repository extends CrudRepository<<Entity>, Long>, Pagi
     @Query("SELECT e FROM <Entity> e WHERE e.ownedBy = :user AND (" + OWNERSHIP_CLAUSE + ")")
     Page<<Entity>> findByOwnedBy(@Param("user") User owner, Pageable pageable);
 
+    @RestResource(exported = false)
     List<<Entity>> findByName(String name);
+    @RestResource(exported = false)
     List<<Entity>> findByOwnedBy(User owner);
 }
 ```
