@@ -17,8 +17,8 @@ import cat.udl.eps.softarch.demo.domain.User;
 import cat.udl.eps.softarch.demo.repository.<Entity>Repository;
 import org.springframework.data.rest.core.annotation.*;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Component;
-import java.time.ZonedDateTime;
 
 @Component
 @RepositoryEventHandler
@@ -39,7 +39,7 @@ public class <Entity>EventHandler {
     public void handle<Entity>PreSave(<Entity> entity) {
         User owner = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         if (!owner.getUsername().equals(entity.getOwnedBy().getUsername())) {
-            throw new SecurityException("Only owner can modify");
+            throw new AccessDeniedException("Only owner can modify");
         }
     }
 }

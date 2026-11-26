@@ -14,7 +14,7 @@ Refer to `skills/` for specific stage playbooks:
 - `skills/sdd-cucumber-steps/SKILL.md`: Implement Cucumber step definitions extending `StepDefs.java`.
 - `skills/spring-datarest-entity/SKILL.md`: Generate domain entities and their `@RepositoryRestResource` interfaces with SpEL queries.
 - `skills/spring-datarest-handler/SKILL.md`: Generate `@RepositoryEventHandler` for entities lifecycle events management.
-- `skills/sdd-bdd-verifier/SKILL.md`: Run `mvn test -Dtest=CucumberTest` and analyze failures.
+- `skills/sdd-bdd-verifier/SKILL.md`: Run `mvn clean test -Dtest=CucumberTest` and analyze failures.
 
 Detailed AI workflows are documented in `AI_DEVELOPMENT_GUIDE.md`.
 
