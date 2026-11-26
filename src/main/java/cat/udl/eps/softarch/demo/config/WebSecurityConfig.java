@@ -36,6 +36,7 @@ public class WebSecurityConfig {
                 .requestMatchers(HttpMethod.GET, "/records/*").permitAll()  // Allow retrieving public records
                 .requestMatchers(HttpMethod.GET, "/documents").authenticated()
                 .requestMatchers(HttpMethod.POST, "/documents").authenticated()
+                .requestMatchers("/auditLogs", "/auditLogs/**").hasRole("ADMIN")
                 .requestMatchers(HttpMethod.GET, "/*/*").authenticated()
                 .requestMatchers(HttpMethod.POST, "/*/*").authenticated()
                 .requestMatchers(HttpMethod.PUT, "/*/*").authenticated()
